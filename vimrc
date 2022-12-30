@@ -10,6 +10,10 @@ set updatetime=50
 set number
 set wildignore=*.dump,*.o,*.tmp
 set completeopt=menuone,noselect,noinsert
+set cursorline
+set showmode
+set backspace=indent,eol,start
+
 colorscheme habamax
 
 let &t_SI = "\e[6 q"
@@ -20,22 +24,22 @@ call jetpack#begin()
   Jetpack 'tani/vim-jetpack', {'opt': 1}
 
   " denops
-  Jetpack 'vim-denops/denops.vim'
-  Jetpack 'Shougo/ddu.vim'
-  Jetpack 'Shougo/ddu-ui-ff'
-  Jetpack 'Shougo/ddu-kind-file'
-  Jetpack 'Shougo/ddu-filter-matcher_substring'
-  Jetpack 'Shougo/ddu-source-file_rec'
-  Jetpack 'Shougo/ddu-source-file_old'
-  Jetpack 'Shougo/ddu-source-rg'
-  Jetpack 'Shougo/ddu-source-file_external'
-  Jetpack 'Shougo/ddu-source-line'
+  " Jetpack 'vim-denops/denops.vim'
+  " Jetpack 'Shougo/ddu.vim'
+  " Jetpack 'Shougo/ddu-ui-ff'
+  " Jetpack 'Shougo/ddu-kind-file'
+  " Jetpack 'Shougo/ddu-filter-matcher_substring'
+  " Jetpack 'Shougo/ddu-source-file_rec'
+  " Jetpack 'Shougo/ddu-source-file_old'
+  " Jetpack 'Shougo/ddu-source-rg'
+  " Jetpack 'Shougo/ddu-source-file_external'
+  " Jetpack 'Shougo/ddu-source-line'
+  " Jetpack 'Shougo/ddu-source-buffer'
 
   Jetpack 'ryicoh/deepl.vim'
   Jetpack 'justinmk/vim-sneak'
   Jetpack 'haya14busa/vim-edgemotion'
 
-  Jetpack 'jparise/vim-graphql'
   Jetpack 'prabirshrestha/vim-lsp'
   Jetpack 'mattn/vim-lsp-settings'
   Jetpack 'prabirshrestha/asyncomplete.vim'
@@ -48,20 +52,28 @@ call jetpack#begin()
   Jetpack 'tpope/vim-commentary'
   Jetpack 'tpope/vim-repeat'
   Jetpack 'kamykn/spelunker.vim'
+  Jetpack 'ryicoh/vim-cspell'
 
-  Jetpack 'leafgarland/typescript-vim'
-  Jetpack 'peitalin/vim-jsx-typescript'
+  Jetpack 'jparise/vim-graphql', { 'for': 'graphql' }
+  Jetpack 'leafgarland/typescript-vim', { 'for': ['typescript', 'typescriptreact'] }
+  Jetpack 'peitalin/vim-jsx-typescript', { 'for': 'typescriptreact' }
+
+  Jetpack 'junegunn/fzf', { 'do': { -> fzf#install() } }
+  Jetpack 'junegunn/fzf.vim'
 
 call jetpack#end()
 
-source <sfile>:h/ddu.vim
+" source <sfile>:h/ddu.vim
 
-let g:lsp_signature_help_delay = 100
-let g:lsp_diagnostics_echo_delay = 100
-let g:lsp_diagnostics_float_delay = 100
-let g:lsp_diagnostics_highlights_delay = 100
-let g:lsp_diagnostics_signs_delay = 100
+let g:lsp_signature_help_delay = 50
 let g:lsp_diagnostics_echo_cursor = 1
+let g:lsp_diagnostics_echo_delay = 50
+let g:lsp_diagnostics_float_delay = 50
+let g:lsp_diagnostics_float_cursor = 0
+let g:lsp_diagnostics_highlights_delay = 50
+let g:lsp_diagnostics_signs_delay = 50
+let g:lsp_diagnostics_virtual_text_enabled = 0
+let g:lsp_diagnostics_virtual_text_delay = 50
 
 function! s:on_lsp_buffer_enabled() abort
     setlocal omnifunc=lsp#complete
@@ -90,7 +102,10 @@ augroup END
 
 " DeepL
 let g:deepl#endpoint = "https://api-free.deepl.com/v2/translate"
-let g:deepl#auth_key = readfile(expand("~/.config/nvim/deepl_auth_key.txt"))[0]
+let deepl_key = expand("~/.config/nvim/deepl_auth_key.txt")
+if file_readable(deepl_key)
+  let g:deepl#auth_key = readfile(deepl_key)[0]
+endif
 
 " replace a visual selection
 vmap t<C-e> <Cmd>call deepl#v("EN")<CR>
@@ -110,6 +125,17 @@ else
 endif
 
 " spelunker
-let g:spelunker_check_type = 2
+let g:spelunker_disable_auto_group = 1
 
 autocmd BufNewFile,BufRead *.tsx,*.jsx set filetype=typescriptreact
+
+" fzf
+let $FZF_DEFAULT_OPTS = "--layout=reverse --info=inline --bind ctrl-b:page-up,ctrl-f:page-down,ctrl-u:up+up+up,ctrl-d:down+down+down"
+let g:previewShell = "bat --style=numbers --color=always --line-range :500"
+let g:fzf_custom_options = ['--preview', previewShell.' {}']
+let g:fzf_history_dir = '~/.local/share/fzf-history'
+command! W <Nop>
+nnoremap <silent> <space>f :<C-u>Files<CR>
+nnoremap <silent> <space>h :<C-u>History<CR>
+nnoremap <silent> <space>r :<C-u>Rg<CR>
+

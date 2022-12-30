@@ -37,6 +37,7 @@ command! -nargs=? -complete=dir Files call ddu#start({
 \         'build',
 \         '.next',
 \         'node_modules',
+\         'storybook-static',
 \       ],
 \     },
 \     'options': { 'path': fnamemodify(<q-args>, ':p') },
@@ -73,6 +74,11 @@ command! -nargs=? -complete=dir GStatusFiles call ddu#start({
 command! History call ddu#start({
 \ 'name': 'history',
 \ 'sources': [{ 'name': 'file_old' }]
+\ })
+
+command! Buffers call ddu#start({
+\ 'name': 'buffer',
+\ 'sources': [{ 'name': 'buffer' }]
 \ })
 
 command! -nargs=? -complete=dir Rg call ddu#start({
