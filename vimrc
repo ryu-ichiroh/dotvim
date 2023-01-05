@@ -13,8 +13,15 @@ set completeopt=menuone,noselect,noinsert
 set cursorline
 set showmode
 set backspace=indent,eol,start
+set foldmethod=marker
+
+map <C-l> <Cmd>set nohlsearch<CR>
 
 colorscheme habamax
+
+set termguicolors
+let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
+let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
 
 let &t_SI = "\e[6 q"
 let &t_EI = "\e[2 q"
@@ -23,36 +30,27 @@ packadd vim-jetpack
 call jetpack#begin()
   Jetpack 'tani/vim-jetpack', {'opt': 1}
 
-  " denops
-  " Jetpack 'vim-denops/denops.vim'
-  " Jetpack 'Shougo/ddu.vim'
-  " Jetpack 'Shougo/ddu-ui-ff'
-  " Jetpack 'Shougo/ddu-kind-file'
-  " Jetpack 'Shougo/ddu-filter-matcher_substring'
-  " Jetpack 'Shougo/ddu-source-file_rec'
-  " Jetpack 'Shougo/ddu-source-file_old'
-  " Jetpack 'Shougo/ddu-source-rg'
-  " Jetpack 'Shougo/ddu-source-file_external'
-  " Jetpack 'Shougo/ddu-source-line'
-  " Jetpack 'Shougo/ddu-source-buffer'
-
   Jetpack 'ryicoh/deepl.vim'
-  Jetpack 'justinmk/vim-sneak'
-  Jetpack 'haya14busa/vim-edgemotion'
 
-  Jetpack 'prabirshrestha/vim-lsp'
+  Jetpack 'haya14busa/vim-edgemotion'
+  Jetpack 'justinmk/vim-sneak'
+
+  Jetpack 'prabirshrestha/vim-lsp', {'commit': 'c4bae1f'}
   Jetpack 'mattn/vim-lsp-settings'
   Jetpack 'prabirshrestha/asyncomplete.vim'
   Jetpack 'prabirshrestha/asyncomplete-lsp.vim'
 
+  Jetpack 'hrsh7th/vim-vsnip'
+  Jetpack 'hrsh7th/vim-vsnip-integ'
+  Jetpack 'rafamadriz/friendly-snippets'
+
   Jetpack 'tpope/vim-fugitive'
   Jetpack 'tpope/vim-rhubarb'
   Jetpack 'tpope/vim-surround'
-  Jetpack 'tpope/vim-sensible'
   Jetpack 'tpope/vim-commentary'
   Jetpack 'tpope/vim-repeat'
-  Jetpack 'kamykn/spelunker.vim'
-  Jetpack 'ryicoh/vim-cspell'
+
+  Jetpack 'ryuichiroh/vim-cspell', {'tag': 'v0.3'}
 
   Jetpack 'jparise/vim-graphql', { 'for': 'graphql' }
   Jetpack 'leafgarland/typescript-vim', { 'for': ['typescript', 'typescriptreact'] }
@@ -63,17 +61,19 @@ call jetpack#begin()
 
 call jetpack#end()
 
-" source <sfile>:h/ddu.vim
-
 let g:lsp_signature_help_delay = 50
-let g:lsp_diagnostics_echo_cursor = 1
+let g:lsp_diagnostics_echo_cursor = 0
 let g:lsp_diagnostics_echo_delay = 50
-let g:lsp_diagnostics_float_delay = 50
+let g:lsp_diagnostics_float_delay = 100
 let g:lsp_diagnostics_float_cursor = 0
+let g:lsp_diagnostics_virtual_text_delay = 50
+let g:lsp_diagnostics_virtual_text_enabled = 1
+let g:lsp_diagnostics_virtual_text_align = 'after'
+let g:lsp_diagnostics_virtual_text_padding_left = 2
+let g:lsp_diagnostics_virtual_text_wrap = 'truncate'
 let g:lsp_diagnostics_highlights_delay = 50
 let g:lsp_diagnostics_signs_delay = 50
-let g:lsp_diagnostics_virtual_text_enabled = 0
-let g:lsp_diagnostics_virtual_text_delay = 50
+let g:lsp_diagnostics_signs_enabled = 0
 
 function! s:on_lsp_buffer_enabled() abort
     setlocal omnifunc=lsp#complete
@@ -96,8 +96,7 @@ endfunction
 
 augroup lsp_install
     au!
-    " call s:on_lsp_buffer_enabled only for languages that has the server registered.
-    autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
+    au User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
 augroup END
 
 " DeepL
@@ -124,18 +123,48 @@ else
   set path=,,~/.vim,**
 endif
 
-" spelunker
-let g:spelunker_disable_auto_group = 1
-
 autocmd BufNewFile,BufRead *.tsx,*.jsx set filetype=typescriptreact
 
 " fzf
+let $FZF_DEFAULT_COMMAND = "fd --type f"
 let $FZF_DEFAULT_OPTS = "--layout=reverse --info=inline --bind ctrl-b:page-up,ctrl-f:page-down,ctrl-u:up+up+up,ctrl-d:down+down+down"
 let g:previewShell = "bat --style=numbers --color=always --line-range :500"
 let g:fzf_custom_options = ['--preview', previewShell.' {}']
 let g:fzf_history_dir = '~/.local/share/fzf-history'
+autocmd! FileType fzf tnoremap <expr> <C-r> getreg(nr2char(getchar()))
 command! W <Nop>
 nnoremap <silent> <space>f :<C-u>Files<CR>
 nnoremap <silent> <space>h :<C-u>History<CR>
 nnoremap <silent> <space>r :<C-u>Rg<CR>
 
+" vsnip
+let g:vsnip_filetypes = {}
+let g:vsnip_filetypes.javascriptreact = ['javascript']
+let g:vsnip_filetypes.typescriptreact = ['typescript']
+
+imap <expr> <C-f> vsnip#jumpable(1)   ? '<Plug>(vsnip-jump-next)' : '<C-f>'
+smap <expr> <C-f> vsnip#jumpable(1)   ? '<Plug>(vsnip-jump-next)' : '<C-f>'
+imap <expr> <C-b> vsnip#jumpable(-1)  ? '<Plug>(vsnip-jump-prev)' : '<C-b>'
+smap <expr> <C-b> vsnip#jumpable(-1)  ? '<Plug>(vsnip-jump-prev)' : '<C-b>'
+
+" spell checker
+let g:spelunker_disable_auto_group = 1
+augroup MyCSpell
+  au!
+  au User ChangeCSpellUnknownWord call s:highlight_cspell()
+augroup end
+
+" sneak
+let g:sneak#label = 1
+highlight Sneak guifg=#cc0000 guibg=#000000
+highlight link SneakBackground Comment
+
+let g:sneak_background = 0
+augroup MySneak
+  au!
+  au User SneakEnter let g:sneak_background = matchadd('SneakBackground', '.*')
+  au User SneakLeave call matchdelete(g:sneak_background)
+augroup end
+
+highlight link LspErrorHighlight SpellBad
+highlight link LspErrorVirtualText SpellBad
