@@ -45,7 +45,7 @@ command! PluginClean call delete(plugins_path, 'rf')
 def Plugin(AddAll: func(func(string, dict<any>, ?func)))
   plugins = {}
 
-  AddAll((repo, opts, config) => {
+  AddAll((repo, opts, config = () => 1) => {
     if len(split(repo, '/')) != 2
       throw 'Invalid repository name: ' .. repo
     endif
@@ -79,7 +79,7 @@ def InstallPlugin()
     elseif has_key(plugins[repo], 'commit')
       revision = plugins[repo]['commit']
     endif
-      system('git -C ' .. path .. ' switch --detach ' .. revision)
+    system('git -C ' .. path .. ' switch --detach ' .. revision)
   endfor
 enddef
 
