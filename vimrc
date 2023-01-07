@@ -4,12 +4,13 @@ set expandtab
 set hlsearch
 set autoindent
 set signcolumn=yes
-set wildoptions=pum
+set wildmenu
+set wildoptions=pum,fuzzy
 set ttimeoutlen=50
 set updatetime=50
 set number
 set wildignore=*.dump,*.o,*.tmp
-set completeopt=menuone,noselect,noinsert
+"set completeopt=menuone,noselect,noinsert
 set cursorline
 set showmode
 set backspace=indent,eol,start
@@ -146,13 +147,6 @@ imap <expr> <C-f> vsnip#jumpable(1)   ? '<Plug>(vsnip-jump-next)' : '<C-f>'
 smap <expr> <C-f> vsnip#jumpable(1)   ? '<Plug>(vsnip-jump-next)' : '<C-f>'
 imap <expr> <C-b> vsnip#jumpable(-1)  ? '<Plug>(vsnip-jump-prev)' : '<C-b>'
 smap <expr> <C-b> vsnip#jumpable(-1)  ? '<Plug>(vsnip-jump-prev)' : '<C-b>'
-
-" spell checker
-let g:spelunker_disable_auto_group = 1
-augroup MyCSpell
-  au!
-  au User ChangeCSpellUnknownWord call s:highlight_cspell()
-augroup end
 
 " sneak
 let g:sneak#label = 1
