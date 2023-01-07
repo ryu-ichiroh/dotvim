@@ -61,6 +61,7 @@ def Plugin(AddAll: func(func(string, dict<any>, ?func)))
     plugins[repo] = opts
   })
 
+  LoadPluginConfigPre()
   InstallPlugin()
   LoadPluginConfig()
 enddef
@@ -87,6 +88,15 @@ def InstallPlugin()
   endfor
 enddef
 
+def LoadPluginConfigPre()
+  for repo in keys(plugins)
+    if has_key(plugins[repo], 'pre')
+      var Config = plugins[repo]['pre']
+      Config()
+    endif
+  endfor
+enddef
+
 def LoadPluginConfig()
   for repo in keys(plugins)
     if has_key(plugins[repo], 'config')
@@ -97,8 +107,9 @@ def LoadPluginConfig()
 enddef
 
 Plugin((Add: func(string, dict<any>, ?func)) => {
-  Add('justinmk/vim-sneak', {commit: '93395f5'}, () => {
+  Add('justinmk/vim-sneak', {commit: '93395f5', pre: () => {
     g:sneak#label = 1
+  }}, () => {
     highlight Sneak guifg=#cc0000 guibg=#000000
     highlight link SneakBackground Comment
 
@@ -206,6 +217,7 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
 # }}}
 
 # Others {{{
+
 if filereadable('package.json')
     set path=,,~/.vim,src/**,tests/**
 else
@@ -213,4 +225,5 @@ else
 endif
 
 autocmd BufNewFile,BufRead *.tsx,*.jsx set filetype=typescriptreact
+
 # }}}
