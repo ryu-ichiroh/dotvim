@@ -70,21 +70,24 @@ def InstallPlugin()
   for repo in keys(plugins)
     var name = split(repo, '/')[1]
     var path = plugins_path .. name
-    if isdirectory(path)
-      execute('packadd ' .. name)
-      continue
+
+    if !isdirectory(path)
+      echomsg "Installing " .. repo
+      system('git clone ' .. github_url .. repo .. ' ' .. path)
+      var revision = 'HEAD'
+      if has_key(plugins[repo], 'tag')
+        revision = plugins[repo]['tag']
+      elseif has_key(plugins[repo], 'commit')
+        revision = plugins[repo]['commit']
+      endif
+      system('git -C ' .. path .. ' switch --detach ' .. revision)
     endif
 
-    echomsg "Installing " .. repo
-    system('git clone ' .. github_url .. repo .. ' ' .. path)
-    var revision = 'HEAD'
-    if has_key(plugins[repo], 'tag')
-      revision = plugins[repo]['tag']
-    elseif has_key(plugins[repo], 'commit')
-      revision = plugins[repo]['commit']
+    execute 'packadd ' .. name
+    var doc_path = path .. '/doc'
+    if isdirectory(doc_path)
+      silent! execute 'helptags ' .. doc_path
     endif
-    system('git -C ' .. path .. ' switch --detach ' .. revision)
-    execute('packadd ' .. name)
   endfor
 enddef
 
@@ -104,6 +107,26 @@ def LoadPluginConfig()
       Config()
     endif
   endfor
+enddef
+
+def OnLSPBufferEnabled()
+  if exists('+tagfunc') | setlocal tagfunc=lsp#tagfunc | endif
+  setlocal omnifunc=lsp#complete
+  setlocal signcolumn=yes
+
+  nmap <buffer> gr <plug>(lsp-references)
+  nmap <buffer> gi <plug>(lsp-implementation)
+  nmap <buffer> <leader>rn <plug>(lsp-rename)
+  nmap <buffer> <leader>s <Cmd>LspDocumentSymbol<CR>
+  nmap <buffer> [g <plug>(lsp-previous-diagnostic)
+  nmap <buffer> ]g <plug>(lsp-next-diagnostic)
+  nmap <buffer> K <plug>(lsp-hover)
+  nmap <buffer> ga <Cmd>LspCodeAction<CR>
+  nmap <buffer> <leader>q <Cmd>LspDocumentDiagnostics --buffers=*<CR>
+  nmap <buffer> <leader>f <Cmd>LspDocumentFormat<CR>
+
+  g:lsp_format_sync_timeout = 1000
+  autocmd! BufWritePre *.rs,*.go,*.ts,*.tsx call execute('LspDocumentFormatSync')
 enddef
 
 Plugin((Add: func(string, dict<any>, ?func)) => {
@@ -142,7 +165,7 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
 
   Add('prabirshrestha/vim-lsp', {commit: '5009876'}, () => {
     g:lsp_signature_help_delay = 50
-    g:lsp_diagnostics_echo_cursor = 0
+    g:lsp_diagnostics_echo_cursor = 1
     g:lsp_diagnostics_echo_delay = 50
     g:lsp_diagnostics_float_delay = 100
     g:lsp_diagnostics_float_cursor = 0
@@ -155,29 +178,18 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
     g:lsp_diagnostics_signs_delay = 50
     g:lsp_diagnostics_signs_enabled = 0
 
-    def OnLSPBufferEnabled()
-        setlocal omnifunc=lsp#complete
-        setlocal signcolumn=yes
-        if exists('+tagfunc') | setlocal tagfunc=lsp#tagfunc | endif
-
-        nmap <buffer> gr <plug>(lsp-references)
-        nmap <buffer> gi <plug>(lsp-implementation)
-        nmap <buffer> <leader>rn <plug>(lsp-rename)
-        nmap <buffer> [g <plug>(lsp-previous-diagnostic)
-        nmap <buffer> ]g <plug>(lsp-next-diagnostic)
-        nmap <buffer> K <plug>(lsp-hover)
-        nmap <buffer> ga <Cmd>LspCodeAction<CR>
-        nmap <buffer> <leader>q <Cmd>LspDocumentDiagnostics --buffers=*<CR>
-        nmap <buffer> <leader>f <Cmd>LspDocumentFormat<CR>
-
-        g:lsp_format_sync_timeout = 1000
-        autocmd! BufWritePre *.rs,*.go,*.ts,*.tsx call execute('LspDocumentFormatSync')
-    enddef
-
     augroup lsp_install
-        au!
-        au User lsp_buffer_enabled call OnLSPBufferEnabled()
+      autocmd!
+      autocmd User lsp_buffer_enabled OnLSPBufferEnabled()
     augroup END
+
+    augroup lsp_folding
+      autocmd!
+      autocmd FileType go setlocal
+        \ foldmethod=expr
+        \ foldexpr=lsp#ui#vim#folding#foldexpr()
+        \ | setlocal foldlevel=99
+    augroup end
 
     highlight link LspErrorHighlight SpellBad
     highlight link LspErrorVirtualText SpellBad
@@ -212,6 +224,12 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
   })
   Add('hrsh7th/vim-vsnip-integ', { commit: '1cf8990' })
   Add('rafamadriz/friendly-snippets', {commit: '484fb38'})
+  Add('vim-test/vim-test', {commit:  '4d6c408'}, () => {
+    nmap <silent> <leader>t :TestNearest<CR>
+    nmap <silent> <leader>T :TestFile<CR>
+    nmap <silent> <leader>a :TestSuite<CR>
+    legacy let test#strategy = "vimterminal"
+  })
 })
 
 # }}}
@@ -219,11 +237,12 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
 # Others {{{
 
 if filereadable('package.json')
-    set path=,,~/.vim,src/**,tests/**
+  set path=,,~/.vim,src/**,tests/**
 else
-    set path=,,~/.vim,**
+  set path=,,~/.vim,**
 endif
 
 autocmd BufNewFile,BufRead *.tsx,*.jsx set filetype=typescriptreact
+nmap <leader>s <Nop>
 
 # }}}
