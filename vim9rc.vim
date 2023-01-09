@@ -20,7 +20,6 @@ set cursorline
 set showmode
 set backspace=indent,eol,start
 set termguicolors
-set foldmethod=marker
 
 syntax on
 colorscheme habamax
@@ -177,19 +176,13 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
     g:lsp_diagnostics_highlights_delay = 50
     g:lsp_diagnostics_signs_delay = 50
     g:lsp_diagnostics_signs_enabled = 0
+    # g:lsp_log_file = '/tmp/vim-lsp.log'
+    # g:lsp_log_verbose = 1
 
     augroup lsp_install
       autocmd!
       autocmd User lsp_buffer_enabled OnLSPBufferEnabled()
     augroup END
-
-    augroup lsp_folding
-      autocmd!
-      autocmd FileType go setlocal
-        \ foldmethod=expr
-        \ foldexpr=lsp#ui#vim#folding#foldexpr()
-        \ | setlocal foldlevel=99
-    augroup end
 
     highlight link LspErrorHighlight SpellBad
     highlight link LspErrorVirtualText SpellBad
@@ -230,6 +223,7 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
     nmap <silent> <leader>a :TestSuite<CR>
     legacy let test#strategy = "vimterminal"
   })
+  Add('itchyny/lightline.vim', {'commit': 'b1e91b4'})
 })
 
 # }}}
@@ -242,7 +236,10 @@ else
   set path=,,~/.vim,**
 endif
 
-autocmd BufNewFile,BufRead *.tsx,*.jsx set filetype=typescriptreact
+autocmd BufNewFile,BufRead *.tsx set filetype=typescriptreact
 nmap <leader>s <Nop>
+
+autocmd BufNewFile,BufRead *.go,*.ts,*.tsx setlocal foldmethod=syntax foldlevel=99
+autocmd BufNewFile,BufRead *.vim setlocal foldmethod=marker
 
 # }}}
