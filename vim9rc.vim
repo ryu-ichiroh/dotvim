@@ -20,6 +20,7 @@ set cursorline
 set showmode
 set backspace=indent,eol,start
 set termguicolors
+set laststatus=2
 
 syntax on
 colorscheme habamax
@@ -40,13 +41,16 @@ var github_url = 'https://github.com/'
 var plugins_path = expand('~/.vim/pack/plugins/opt/')
 
 command! PluginInstall InstallPlugin()
-command! PluginClean call delete(plugins_path, 'rf')
+command! -narg=1 PluginUninstall UninstallPlugin(<f-args>)
+command! PluginClean delete(plugins_path, 'rf')
+command! PluginList ListPlugin()
 
 def Plugin(AddAll: func(func(string, dict<any>, ?func)))
   plugins = {}
 
   AddAll((repo, opts, config = () => ({})) => {
-    if len(split(repo, '/')) != 2
+    var parts = split(repo, '/')
+    if len(parts) != 2
       throw 'Invalid repository name: ' .. repo
     endif
     if !has_key(opts, 'tag') && !has_key(opts, 'commit')
@@ -57,7 +61,9 @@ def Plugin(AddAll: func(func(string, dict<any>, ?func)))
     endif
 
     opts['config'] = config
-    plugins[repo] = opts
+    opts['repo'] = repo
+    var name = split(repo, '/')[1]
+    plugins[parts[1]] = opts
   })
 
   LoadPluginConfigPre()
@@ -66,18 +72,19 @@ def Plugin(AddAll: func(func(string, dict<any>, ?func)))
 enddef
 
 def InstallPlugin()
-  for repo in keys(plugins)
-    var name = split(repo, '/')[1]
+  for name in keys(plugins)
+    var repo = plugins[name]['repo']
     var path = plugins_path .. name
+    var opts = plugins[name]
 
     if !isdirectory(path)
       echomsg "Installing " .. repo
       system('git clone ' .. github_url .. repo .. ' ' .. path)
       var revision = 'HEAD'
-      if has_key(plugins[repo], 'tag')
-        revision = plugins[repo]['tag']
-      elseif has_key(plugins[repo], 'commit')
-        revision = plugins[repo]['commit']
+      if has_key(opts, 'tag')
+        revision = opts['tag']
+      elseif has_key(opts, 'commit')
+        revision = opts['commit']
       endif
       system('git -C ' .. path .. ' switch --detach ' .. revision)
     endif
@@ -90,19 +97,37 @@ def InstallPlugin()
   endfor
 enddef
 
+def UninstallPlugin(name: string)
+  if !has_key(plugins, name)
+    throw name .. " not found"
+  endif
+
+  var path = plugins_path .. name
+  delete(path, 'rf')
+  remove(plugins, name)
+enddef
+
+def ListPlugin()
+  for name in keys(plugins)
+    echo '* ' .. plugins[name]['repo']
+  endfor
+enddef
+
 def LoadPluginConfigPre()
-  for repo in keys(plugins)
-    if has_key(plugins[repo], 'pre')
-      var Config = plugins[repo]['pre']
+  for name in keys(plugins)
+    var opts = plugins[name]
+    if has_key(opts, 'pre')
+      var Config = opts['pre']
       Config()
     endif
   endfor
 enddef
 
 def LoadPluginConfig()
-  for repo in keys(plugins)
-    if has_key(plugins[repo], 'config')
-      var Config = plugins[repo]['config']
+  for name in keys(plugins)
+    var opts = plugins[name]
+    if has_key(opts, 'config')
+      var Config = opts['config']
       Config()
     endif
   endfor
@@ -223,7 +248,9 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
     nmap <silent> <leader>a :TestSuite<CR>
     legacy let test#strategy = "vimterminal"
   })
-  Add('itchyny/lightline.vim', {'commit': 'b1e91b4'})
+  Add('itchyny/lightline.vim', {'commit': 'b1e91b4'}, () => {
+    g:lightline = {'colorscheme': 'PaperColor'}
+  })
 })
 
 # }}}
