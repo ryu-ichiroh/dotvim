@@ -66,9 +66,11 @@ def Plugin(AddAll: func(func(string, dict<any>, ?func)))
     plugins[parts[1]] = opts
   })
 
-  LoadPluginConfigPre()
-  InstallPlugin()
-  LoadPluginConfig()
+  timer_start(1, (_) => {
+    LoadPluginConfigPre()
+    InstallPlugin()
+    LoadPluginConfig()
+  })
 enddef
 
 def InstallPlugin()
@@ -201,6 +203,7 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
     g:lsp_diagnostics_highlights_delay = 50
     g:lsp_diagnostics_signs_delay = 50
     g:lsp_diagnostics_signs_enabled = 0
+    g:lsp_auto_enable = 0
     # g:lsp_log_file = '/tmp/vim-lsp.log'
     # g:lsp_log_verbose = 1
 
@@ -211,6 +214,8 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
 
     highlight link LspErrorHighlight SpellBad
     highlight link LspErrorVirtualText SpellBad
+
+    call lsp#enable()
   })
   Add('mattn/vim-lsp-settings', {commit: '1a5c082'})
   Add('prabirshrestha/asyncomplete.vim', {commit: '9c76518'})
