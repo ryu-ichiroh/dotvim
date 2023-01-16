@@ -1,1 +1,1 @@
-execute 'source' fnamemodify(expand('<sfile>'), ':h').'/vim9rc.vim'
+/Users/ryicoh/.vim/vim9rc.vim

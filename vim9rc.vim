@@ -8,7 +8,7 @@ set tabstop=2
 set expandtab
 set hlsearch
 set autoindent
-set signcolumn=yes
+# set signcolumn=yes
 set wildmenu
 set wildoptions=pum,fuzzy
 set ttimeoutlen=50
@@ -25,7 +25,7 @@ set laststatus=2
 syntax on
 colorscheme habamax
 
-map <C-l> <Cmd>set nohlsearch<CR>
+map <C-l> <Cmd>nohlsearch<CR>
 
 &t_8f ..= "\<Esc>[38;2;%lu;%lu;%lum"
 &t_8b ..= "\<Esc>[48;2;%lu;%lu;%lum"
@@ -42,6 +42,7 @@ var plugins_path = expand('~/.vim/pack/plugins/opt/')
 
 command! PluginInstall InstallPlugin()
 command! -narg=1 PluginUninstall UninstallPlugin(<f-args>)
+command! -narg=1 PluginOpen OpenPlugin(<f-args>)
 command! PluginClean delete(plugins_path, 'rf')
 command! PluginList ListPlugin()
 
@@ -115,6 +116,15 @@ def ListPlugin()
   endfor
 enddef
 
+def OpenPlugin(name: string)
+  if !has_key(plugins, name)
+    throw name .. " not found"
+  endif
+
+  var path = plugins_path .. name
+  execute "e " .. path
+enddef
+
 def LoadPluginConfigPre()
   for name in keys(plugins)
     var opts = plugins[name]
@@ -138,7 +148,6 @@ enddef
 def OnLSPBufferEnabled()
   if exists('+tagfunc') | setlocal tagfunc=lsp#tagfunc | endif
   setlocal omnifunc=lsp#complete
-  setlocal signcolumn=yes
 
   nmap <buffer> gr <plug>(lsp-references)
   nmap <buffer> gi <plug>(lsp-implementation)
@@ -189,20 +198,25 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
   Add('tpope/vim-commentary', {commit: 'e87cd90'})
   Add('tpope/vim-rhubarb', {commit: 'cad60fe'})
 
-  Add('prabirshrestha/vim-lsp', {commit: '5009876'}, () => {
+  Add('ryuichiroh/vim-lsp', {commit: '21cc8b2'}, () => {
+    g:lsp_signature_help_enabled = 0
     g:lsp_signature_help_delay = 50
     g:lsp_diagnostics_echo_cursor = 1
     g:lsp_diagnostics_echo_delay = 50
+    g:lsp_diagnostics_float_cursor = 1
     g:lsp_diagnostics_float_delay = 100
-    g:lsp_diagnostics_float_cursor = 0
-    g:lsp_diagnostics_virtual_text_delay = 50
+    g:lsp_diagnostics_float_insert_mode_enabled = 0
     g:lsp_diagnostics_virtual_text_enabled = 1
+    g:lsp_diagnostics_virtual_text_delay = 50
     g:lsp_diagnostics_virtual_text_align = 'after'
     g:lsp_diagnostics_virtual_text_padding_left = 2
     g:lsp_diagnostics_virtual_text_wrap = 'truncate'
+    g:lsp_diagnostics_highlights_enabled = 1
     g:lsp_diagnostics_highlights_delay = 50
-    g:lsp_diagnostics_signs_delay = 50
     g:lsp_diagnostics_signs_enabled = 0
+    g:lsp_diagnostics_signs_delay = 50
+    g:lsp_document_code_action_signs_enabled = 0
+    g:lsp_document_code_action_signs_delay = 50
     g:lsp_auto_enable = 0
     # g:lsp_log_file = '/tmp/vim-lsp.log'
     # g:lsp_log_verbose = 1
@@ -214,11 +228,18 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
 
     highlight link LspErrorHighlight SpellBad
     highlight link LspErrorVirtualText SpellBad
+    highlight link LspWarningVirtualText SpellCap
+    highlight link LspInformationVirtualText SpellCap
+    highlight link LspHintVirtualText SpellRare
 
     call lsp#enable()
   })
   Add('mattn/vim-lsp-settings', {commit: '1a5c082'})
-  Add('prabirshrestha/asyncomplete.vim', {commit: '9c76518'})
+  Add('prabirshrestha/asyncomplete.vim', {commit: '9c76518'}, () => {
+    g:asyncomplete_popup_delay = 10
+    g:asyncomplete_min_chars = 2
+    # g:asyncomplete_log_file = '/tmp/asyncomplete.log'
+  })
   Add('prabirshrestha/asyncomplete-lsp.vim', {commit: 'cc5247b'})
 
   Add('junegunn/fzf', { commit: 'fd7fab7' })
@@ -256,6 +277,8 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
   Add('itchyny/lightline.vim', {'commit': 'b1e91b4'}, () => {
     g:lightline = {'colorscheme': 'PaperColor'}
   })
+  Add('chr4/nginx.vim', {'commit': '9969445'})
+  Add('mattn/vim-maketable', {'commit': 'd72e73f'})
 })
 
 # }}}
@@ -272,6 +295,6 @@ autocmd BufNewFile,BufRead *.tsx set filetype=typescriptreact
 nmap <leader>s <Nop>
 
 autocmd BufNewFile,BufRead *.go,*.ts,*.tsx setlocal foldmethod=syntax foldlevel=99
-autocmd BufNewFile,BufRead *.vim setlocal foldmethod=marker
+autocmd BufNewFile,BufRead *.vim,vimrc setlocal foldmethod=marker
 
 # }}}
