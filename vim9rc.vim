@@ -11,8 +11,8 @@ set autoindent
 # set signcolumn=yes
 set wildmenu
 set wildoptions=pum,fuzzy
-set ttimeoutlen=50
-set updatetime=50
+set ttimeoutlen=30
+set updatetime=30
 set number
 set wildignore=*.dump,*.o,*.tmp
 # set completeopt=menuone,noselect,noinsert
@@ -21,6 +21,9 @@ set showmode
 set backspace=indent,eol,start
 set termguicolors
 set laststatus=2
+set shortmess-=S
+set viminfo='10000,<50,s100,h,:100000
+# set nowrap
 
 syntax on
 colorscheme habamax
@@ -34,13 +37,13 @@ map <C-l> <Cmd>nohlsearch<CR>
 
 # }}}
 
-# Plugins {{{
+# Plugin Manager {{{
 
 var plugins = {}
 var github_url = 'https://github.com/'
 var plugins_path = expand('~/.vim/pack/plugins/opt/')
 
-command! PluginInstall InstallPlugin()
+command! PluginInstall InstallPlugin(){
 command! -narg=1 PluginUninstall UninstallPlugin(<f-args>)
 command! -narg=1 PluginOpen OpenPlugin(<f-args>)
 command! PluginClean delete(plugins_path, 'rf')
@@ -54,8 +57,9 @@ def Plugin(AddAll: func(func(string, dict<any>, ?func)))
     if len(parts) != 2
       throw 'Invalid repository name: ' .. repo
     endif
-    if !has_key(opts, 'tag') && !has_key(opts, 'commit')
-      throw 'Revision is not specified: ' .. repo
+    if !((has_key(opts, 'tag')    && opts['tag'] != '') ||
+       \ (has_key(opts, 'commit') && strlen(opts['commit']) >= 7))
+      throw 'Revision is not specified: ' .. repo .. has_key(opts, 'commit')
     endif
     if has_key(plugins, repo)
       throw 'Already added plugin: ' .. repo
@@ -67,11 +71,11 @@ def Plugin(AddAll: func(func(string, dict<any>, ?func)))
     plugins[parts[1]] = opts
   })
 
-  timer_start(1, (_) => {
+  # timer_start(1, (_) => {
     LoadPluginConfigPre()
     InstallPlugin()
     LoadPluginConfig()
-  })
+  # })
 enddef
 
 def InstallPlugin()
@@ -145,6 +149,9 @@ def LoadPluginConfig()
   endfor
 enddef
 
+# }}}
+
+# Plugins {{{
 def OnLSPBufferEnabled()
   if exists('+tagfunc') | setlocal tagfunc=lsp#tagfunc | endif
   setlocal omnifunc=lsp#complete
@@ -200,23 +207,24 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
 
   Add('ryuichiroh/vim-lsp', {commit: '21cc8b2'}, () => {
     g:lsp_signature_help_enabled = 0
-    g:lsp_signature_help_delay = 50
+    g:lsp_signature_help_delay = 30
     g:lsp_diagnostics_echo_cursor = 1
-    g:lsp_diagnostics_echo_delay = 50
-    g:lsp_diagnostics_float_cursor = 1
+    g:lsp_diagnostics_echo_delay = 30
+    g:lsp_diagnostics_float_cursor = 0
     g:lsp_diagnostics_float_delay = 100
     g:lsp_diagnostics_float_insert_mode_enabled = 0
     g:lsp_diagnostics_virtual_text_enabled = 1
-    g:lsp_diagnostics_virtual_text_delay = 50
+    g:lsp_diagnostics_virtual_text_delay = 30
     g:lsp_diagnostics_virtual_text_align = 'after'
     g:lsp_diagnostics_virtual_text_padding_left = 2
     g:lsp_diagnostics_virtual_text_wrap = 'truncate'
+    g:lsp_diagnostics_virtual_text_only_highest_severity_enabled = 1
     g:lsp_diagnostics_highlights_enabled = 1
-    g:lsp_diagnostics_highlights_delay = 50
+    g:lsp_diagnostics_highlights_delay = 30
     g:lsp_diagnostics_signs_enabled = 0
-    g:lsp_diagnostics_signs_delay = 50
+    g:lsp_diagnostics_signs_delay = 30
     g:lsp_document_code_action_signs_enabled = 0
-    g:lsp_document_code_action_signs_delay = 50
+    g:lsp_document_code_action_signs_delay = 30
     g:lsp_auto_enable = 0
     # g:lsp_log_file = '/tmp/vim-lsp.log'
     # g:lsp_log_verbose = 1
@@ -227,6 +235,7 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
     augroup END
 
     highlight link LspErrorHighlight SpellBad
+    highlight link LspHintHighlight SpellRare
     highlight link LspErrorVirtualText SpellBad
     highlight link LspWarningVirtualText SpellCap
     highlight link LspInformationVirtualText SpellCap
@@ -234,13 +243,31 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
 
     call lsp#enable()
   })
+
   Add('mattn/vim-lsp-settings', {commit: '1a5c082'})
   Add('prabirshrestha/asyncomplete.vim', {commit: '9c76518'}, () => {
-    g:asyncomplete_popup_delay = 10
+    g:asyncomplete_popup_delay = 30
     g:asyncomplete_min_chars = 2
+    # g:asyncomplete_auto_completeopt = 1
     # g:asyncomplete_log_file = '/tmp/asyncomplete.log'
   })
   Add('prabirshrestha/asyncomplete-lsp.vim', {commit: 'cc5247b'})
+
+  # Add('vim-denops/denops.vim', {commit: '44baa06'})
+  # Add('Shougo/ddc.vim', {commit: '60acdc1'})
+  # Add('Shougo/ddc-matcher_head', {commit: '470cd38'})
+  # Add('shun/ddc-source-vim-lsp', {commit: 'fe4f10f'})
+  # Add('Shougo/ddc-ui-native', {commit: 'c67a48d'}, () => {
+  #   ddc#custom#patch_global('ui', 'native')
+  #   ddc#custom#patch_global('sources', ['vim-lsp'])
+  #   ddc#custom#patch_global('sourceOptions', {
+  #   \ 'vim-lsp': {
+  #   \   'matchers': ['matcher_head'],
+  #   \   'mark': 'lsp',
+  #   \ },
+  #   \ })
+  #   ddc#enable()
+  # })
 
   Add('junegunn/fzf', { commit: 'fd7fab7' })
   Add('junegunn/fzf.vim', { commit: 'fd7fab7' }, () => {
@@ -257,6 +284,9 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
   })
 
   Add('hrsh7th/vim-vsnip', { commit: 'e44026b' }, () => {
+    g:vsnip_extra_mapping = 0
+    g:vsnip_sync_delay = 10
+    g:vsnip_choice_delay = 30
     g:vsnip_filetypes = {}
     g:vsnip_filetypes.javascriptreact = ['javascript']
     g:vsnip_filetypes.typescriptreact = ['typescript']
@@ -266,7 +296,7 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
     imap <expr> <C-b> vsnip#jumpable(-1)  ? '<Plug>(vsnip-jump-prev)' : '<C-b>'
     smap <expr> <C-b> vsnip#jumpable(-1)  ? '<Plug>(vsnip-jump-prev)' : '<C-b>'
   })
-  Add('hrsh7th/vim-vsnip-integ', { commit: '1cf8990' })
+  # Add('hrsh7th/vim-vsnip-integ', { commit: '1cf8990' })
   Add('rafamadriz/friendly-snippets', {commit: '484fb38'})
   Add('vim-test/vim-test', {commit:  '4d6c408'}, () => {
     nmap <silent> <leader>t :TestNearest<CR>
@@ -298,3 +328,4 @@ autocmd BufNewFile,BufRead *.go,*.ts,*.tsx setlocal foldmethod=syntax foldlevel=
 autocmd BufNewFile,BufRead *.vim,vimrc setlocal foldmethod=marker
 
 # }}}
+
