@@ -29,6 +29,7 @@ syntax on
 colorscheme habamax
 
 map <C-l> <Cmd>nohlsearch<CR>
+# inoremap . .<C-x><C-o>
 
 &t_8f ..= "\<Esc>[38;2;%lu;%lu;%lum"
 &t_8b ..= "\<Esc>[48;2;%lu;%lu;%lum"
@@ -205,53 +206,80 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
   Add('tpope/vim-commentary', {commit: 'e87cd90'})
   Add('tpope/vim-rhubarb', {commit: 'cad60fe'})
 
-  Add('ryuichiroh/vim-lsp', {commit: '21cc8b2'}, () => {
-    g:lsp_signature_help_enabled = 0
-    g:lsp_signature_help_delay = 30
-    g:lsp_diagnostics_echo_cursor = 1
-    g:lsp_diagnostics_echo_delay = 30
-    g:lsp_diagnostics_float_cursor = 0
-    g:lsp_diagnostics_float_delay = 100
-    g:lsp_diagnostics_float_insert_mode_enabled = 0
-    g:lsp_diagnostics_virtual_text_enabled = 1
-    g:lsp_diagnostics_virtual_text_delay = 30
-    g:lsp_diagnostics_virtual_text_align = 'after'
-    g:lsp_diagnostics_virtual_text_padding_left = 2
-    g:lsp_diagnostics_virtual_text_wrap = 'truncate'
-    g:lsp_diagnostics_virtual_text_only_highest_severity_enabled = 1
-    g:lsp_diagnostics_highlights_enabled = 1
-    g:lsp_diagnostics_highlights_delay = 30
-    g:lsp_diagnostics_signs_enabled = 0
-    g:lsp_diagnostics_signs_delay = 30
-    g:lsp_document_code_action_signs_enabled = 0
-    g:lsp_document_code_action_signs_delay = 30
-    g:lsp_auto_enable = 0
-    # g:lsp_log_file = '/tmp/vim-lsp.log'
-    # g:lsp_log_verbose = 1
+  Add('yegappan/lsp', {commit: 'b054bc3'}, () => {
+    final lspServers = [
+    \   {
+    \     'filetype': ['javascript', 'typescript', 'typescriptreact'],
+    \     'path': expand('~/.local/share/vim-lsp-settings/servers/typescript-language-server/typescript-language-server'),
+    \     'args': ['--stdio'],
+    \   },
+    \ ]
+    g:LspAddServer(lspServers)
 
-    augroup lsp_install
-      autocmd!
-      autocmd User lsp_buffer_enabled OnLSPBufferEnabled()
-    augroup END
-
-    highlight link LspErrorHighlight SpellBad
-    highlight link LspHintHighlight SpellRare
-    highlight link LspErrorVirtualText SpellBad
-    highlight link LspWarningVirtualText SpellCap
-    highlight link LspInformationVirtualText SpellCap
-    highlight link LspHintVirtualText SpellRare
-
-    call lsp#enable()
+    def g:LspConfig()
+      nnoremap K <Cmd>LspPeekDefinition<CR>
+      nnoremap ]g <Cmd>LspDiagNext<CR>
+      nnoremap [g <Cmd>LspDiagPrev<CR>
+      nnoremap ]d <Cmd>LspDiagNext<CR>
+      nnoremap [d <Cmd>LspDiagPrev<CR>
+      setlocal signcolumn=yes
+      setlocal tagfunc=lsp#lsp#TagFunc
+    enddef
+    augroup my-lsp
+      au!
+      au User LspAttached g:LspConfig()
+    augroup end
   })
 
-  Add('mattn/vim-lsp-settings', {commit: '1a5c082'})
-  Add('prabirshrestha/asyncomplete.vim', {commit: '9c76518'}, () => {
-    g:asyncomplete_popup_delay = 30
-    g:asyncomplete_min_chars = 2
-    # g:asyncomplete_auto_completeopt = 1
-    # g:asyncomplete_log_file = '/tmp/asyncomplete.log'
-  })
-  Add('prabirshrestha/asyncomplete-lsp.vim', {commit: 'cc5247b'})
+  # Add('ryuichiroh/vim-lsp', {commit: '21cc8b2'}, () => {
+  #   g:lsp_signature_help_enabled = 0
+  #   g:lsp_signature_help_delay = 30
+  #   g:lsp_diagnostics_echo_cursor = 1
+  #   g:lsp_diagnostics_echo_delay = 30
+  #   g:lsp_diagnostics_float_cursor = 1
+  #   g:lsp_diagnostics_float_delay = 100
+  #   g:lsp_diagnostics_float_insert_mode_enabled = 0
+  #   g:lsp_diagnostics_virtual_text_enabled = 1
+  #   g:lsp_diagnostics_virtual_text_delay = 30
+  #   g:lsp_diagnostics_virtual_text_align = 'after'
+  #   g:lsp_diagnostics_virtual_text_padding_left = 2
+  #   g:lsp_diagnostics_virtual_text_wrap = 'truncate'
+  #   g:lsp_diagnostics_virtual_text_only_highest_severity_enabled = 1
+  #   g:lsp_diagnostics_highlights_enabled = 1
+  #   g:lsp_diagnostics_highlights_delay = 30
+  #   g:lsp_diagnostics_signs_enabled = 0
+  #   g:lsp_diagnostics_signs_delay = 30
+  #   g:lsp_document_code_action_signs_enabled = 0
+  #   g:lsp_document_code_action_signs_delay = 30
+  #   g:lsp_auto_enable = 0
+  #   g:lsp_use_lua = 1
+  #   # g:lsp_log_file = '/tmp/vim-lsp.log'
+  #   # g:lsp_log_verbose = 1
+
+  #   augroup lsp_install
+  #     autocmd!
+  #     autocmd User lsp_buffer_enabled OnLSPBufferEnabled()
+  #   augroup END
+
+  #   highlight link LspErrorHighlight SpellBad
+  #   highlight link LspHintHighlight SpellRare
+  #   highlight link LspErrorVirtualText SpellBad
+  #   highlight link LspWarningVirtualText SpellCap
+  #   highlight link LspInformationVirtualText SpellCap
+  #   highlight link LspHintVirtualText SpellRare
+
+  #   call lsp#enable()
+  # })
+
+  # Add('mattn/vim-lsp-settings', {commit: '1a5c082'})
+  # Add('prabirshrestha/asyncomplete.vim', {commit: '9c76518'}, () => {
+  #   g:asyncomplete_popup_delay = 30
+  #   g:asyncomplete_min_chars = 2
+  #   # g:asyncomplete_matchfuzzy = 0
+  #   # g:asyncomplete_auto_completeopt = 1
+  #   # g:asyncomplete_log_file = '/tmp/asyncomplete.log'
+  # })
+  # Add('prabirshrestha/asyncomplete-lsp.vim', {commit: 'cc5247b'})
 
   # Add('vim-denops/denops.vim', {commit: '44baa06'})
   # Add('Shougo/ddc.vim', {commit: '60acdc1'})
@@ -296,7 +324,7 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
     imap <expr> <C-b> vsnip#jumpable(-1)  ? '<Plug>(vsnip-jump-prev)' : '<C-b>'
     smap <expr> <C-b> vsnip#jumpable(-1)  ? '<Plug>(vsnip-jump-prev)' : '<C-b>'
   })
-  # Add('hrsh7th/vim-vsnip-integ', { commit: '1cf8990' })
+  Add('hrsh7th/vim-vsnip-integ', { commit: '1cf8990' })
   Add('rafamadriz/friendly-snippets', {commit: '484fb38'})
   Add('vim-test/vim-test', {commit:  '4d6c408'}, () => {
     nmap <silent> <leader>t :TestNearest<CR>
@@ -322,10 +350,16 @@ else
 endif
 
 autocmd BufNewFile,BufRead *.tsx set filetype=typescriptreact
+autocmd BufNewFile,BufRead *.vimspec set filetype=vim
 nmap <leader>s <Nop>
 
 autocmd BufNewFile,BufRead *.go,*.ts,*.tsx setlocal foldmethod=syntax foldlevel=99
 autocmd BufNewFile,BufRead *.vim,vimrc setlocal foldmethod=marker
+
+def g:ProfileStart(func: string = '')
+  profile start /tmp/vim_profile.txt
+  execute printf('profile func %s', empty(func) ? '*' : func)
+enddef
 
 # }}}
 
