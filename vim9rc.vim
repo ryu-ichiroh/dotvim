@@ -10,7 +10,7 @@ set hlsearch
 set autoindent
 # set signcolumn=yes
 set wildmenu
-set wildoptions=pum,fuzzy
+set wildoptions=pum
 set ttimeoutlen=30
 set updatetime=30
 set number
@@ -23,7 +23,7 @@ set termguicolors
 set laststatus=2
 set shortmess-=S
 set viminfo='10000,<50,s100,h,:100000
-# set nowrap
+set nowrap
 
 syntax on
 colorscheme habamax
@@ -186,7 +186,9 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
       au User SneakLeave call matchdelete(g:sneak_background)
     augroup end
   })
-  Add('ryuichiroh/vim-cspell', {tag: 'v0.3'})
+  # Add('ryuichiroh/vim-cspell', {tag: 'v0.4'}, () => {
+  #   g:cspell_max_bad_words = 100
+  # })
   Add('ryicoh/deepl.vim', {tag: 'v0.1'}, () => {
     g:deepl#endpoint = "https://api-free.deepl.com/v2/translate"
     var deepl_key = expand("~/.config/nvim/deepl_auth_key.txt")
@@ -206,80 +208,93 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
   Add('tpope/vim-commentary', {commit: 'e87cd90'})
   Add('tpope/vim-rhubarb', {commit: 'cad60fe'})
 
-  Add('yegappan/lsp', {commit: 'b054bc3'}, () => {
-    final lspServers = [
-    \   {
-    \     'filetype': ['javascript', 'typescript', 'typescriptreact'],
-    \     'path': expand('~/.local/share/vim-lsp-settings/servers/typescript-language-server/typescript-language-server'),
-    \     'args': ['--stdio'],
-    \   },
-    \ ]
-    g:LspAddServer(lspServers)
+  # Add('yegappan/lsp', {commit: 'b054bc3'}, () => {
+  #   final lspServers = [
+  #   \   {
+  #   \     'filetype': ['javascript', 'typescript', 'typescriptreact'],
+  #   \     'path': expand('~/.local/share/vim-lsp-settings/servers/typescript-language-server/typescript-language-server'),
+  #   \     'args': ['--stdio'],
+  #   \   },
+  #   \   {
+  #   \     'filetype': ['vim'],
+  #   \     'path': expand('~/.local/share/vim-lsp-settings/servers/vim-language-server/vim-language-server'),
+  #   \     'args': ['--stdio'],
+  #   \   },
+  #   \ ]
+  #   g:LspAddServer(lspServers)
 
-    def g:LspConfig()
-      nnoremap K <Cmd>LspPeekDefinition<CR>
-      nnoremap ]g <Cmd>LspDiagNext<CR>
-      nnoremap [g <Cmd>LspDiagPrev<CR>
-      nnoremap ]d <Cmd>LspDiagNext<CR>
-      nnoremap [d <Cmd>LspDiagPrev<CR>
-      setlocal signcolumn=yes
-      setlocal tagfunc=lsp#lsp#TagFunc
-    enddef
-    augroup my-lsp
-      au!
-      au User LspAttached g:LspConfig()
-    augroup end
-  })
+  #   def g:LspConfig()
+  #     nmap <buffer> <leader>d <Cmd>LspPeekDefinition<CR>
+  #     nmap <buffer> K <Cmd>LspHover<CR>
+  #     nmap <buffer> ]g <Cmd>LspDiagNext<CR>
+  #     nmap <buffer> [g <Cmd>LspDiagPrev<CR>
+  #     nmap <buffer> ]d <Cmd>LspDiagNext<CR>
+  #     nmap <buffer> [d <Cmd>LspDiagPrev<CR>
+  #     nmap <buffer> <leader>f <Cmd>LspFormat<CR>
+  #     nmap <buffer> ga <Cmd>LspCodeAction<CR>
+  #     nmap <buffer> <leader>rn LspRename<CR>
+  #     nmap <buffer> <leader>q <Cmd>LspDiagShow<CR>
 
-  # Add('ryuichiroh/vim-lsp', {commit: '21cc8b2'}, () => {
-  #   g:lsp_signature_help_enabled = 0
-  #   g:lsp_signature_help_delay = 30
-  #   g:lsp_diagnostics_echo_cursor = 1
-  #   g:lsp_diagnostics_echo_delay = 30
-  #   g:lsp_diagnostics_float_cursor = 1
-  #   g:lsp_diagnostics_float_delay = 100
-  #   g:lsp_diagnostics_float_insert_mode_enabled = 0
-  #   g:lsp_diagnostics_virtual_text_enabled = 1
-  #   g:lsp_diagnostics_virtual_text_delay = 30
-  #   g:lsp_diagnostics_virtual_text_align = 'after'
-  #   g:lsp_diagnostics_virtual_text_padding_left = 2
-  #   g:lsp_diagnostics_virtual_text_wrap = 'truncate'
-  #   g:lsp_diagnostics_virtual_text_only_highest_severity_enabled = 1
-  #   g:lsp_diagnostics_highlights_enabled = 1
-  #   g:lsp_diagnostics_highlights_delay = 30
-  #   g:lsp_diagnostics_signs_enabled = 0
-  #   g:lsp_diagnostics_signs_delay = 30
-  #   g:lsp_document_code_action_signs_enabled = 0
-  #   g:lsp_document_code_action_signs_delay = 30
-  #   g:lsp_auto_enable = 0
-  #   g:lsp_use_lua = 1
-  #   # g:lsp_log_file = '/tmp/vim-lsp.log'
-  #   # g:lsp_log_verbose = 1
-
-  #   augroup lsp_install
-  #     autocmd!
-  #     autocmd User lsp_buffer_enabled OnLSPBufferEnabled()
-  #   augroup END
-
-  #   highlight link LspErrorHighlight SpellBad
-  #   highlight link LspHintHighlight SpellRare
-  #   highlight link LspErrorVirtualText SpellBad
-  #   highlight link LspWarningVirtualText SpellCap
-  #   highlight link LspInformationVirtualText SpellCap
-  #   highlight link LspHintVirtualText SpellRare
-
-  #   call lsp#enable()
+  #     setlocal signcolumn=yes
+  #     setlocal tagfunc=lsp#lsp#TagFunc
+  #   enddef
+  #   augroup my-lsp
+  #     au!
+  #     au User LspAttached g:LspConfig()
+  #     autocmd! BufWritePre *.ts,*.tsx call execute('LspFormat')
+  #   augroup end
   # })
 
-  # Add('mattn/vim-lsp-settings', {commit: '1a5c082'})
+  Add('ryuichiroh/vim-lsp', {commit: '21cc8b2'}, () => {
+    g:lsp_signature_help_enabled = 0
+    g:lsp_signature_help_delay = 30
+    # g:lsp_diagnostics_echo_cursor = 1
+    # g:lsp_diagnostics_echo_delay = 30
+    g:lsp_diagnostics_float_cursor = 1
+    g:lsp_diagnostics_float_delay = 100
+    g:lsp_diagnostics_float_insert_mode_enabled = 0
+    g:lsp_diagnostics_virtual_text_enabled = 1
+    g:lsp_diagnostics_virtual_text_delay = 30
+    g:lsp_diagnostics_virtual_text_align = 'after'
+    g:lsp_diagnostics_virtual_text_padding_left = 2
+    g:lsp_diagnostics_virtual_text_wrap = 'truncate'
+    g:lsp_diagnostics_virtual_text_only_highest_severity_enabled = 1
+    g:lsp_diagnostics_highlights_enabled = 1
+    g:lsp_diagnostics_highlights_delay = 30
+    g:lsp_diagnostics_signs_enabled = 0
+    g:lsp_diagnostics_signs_delay = 30
+    g:lsp_document_code_action_signs_enabled = 0
+    g:lsp_document_code_action_signs_delay = 30
+    g:lsp_auto_enable = 0
+    g:lsp_use_lua = 1
+    g:lsp_fold_enabled = 0
+    # g:lsp_log_file = '/tmp/vim-lsp.log'
+    # g:lsp_log_verbose = 1
+
+    augroup lsp_install
+      autocmd!
+      autocmd User lsp_buffer_enabled OnLSPBufferEnabled()
+    augroup END
+
+    highlight link LspErrorHighlight SpellBad
+    highlight link LspHintHighlight SpellRare
+    highlight link LspErrorVirtualText SpellBad
+    highlight link LspWarningVirtualText SpellCap
+    highlight link LspInformationVirtualText SpellCap
+    highlight link LspHintVirtualText SpellRare
+
+    call lsp#enable()
+  })
+
+  Add('mattn/vim-lsp-settings', {commit: '1a5c082'})
   # Add('prabirshrestha/asyncomplete.vim', {commit: '9c76518'}, () => {
   #   g:asyncomplete_popup_delay = 30
   #   g:asyncomplete_min_chars = 2
-  #   # g:asyncomplete_matchfuzzy = 0
+  #   g:asyncomplete_matchfuzzy = 1
   #   # g:asyncomplete_auto_completeopt = 1
   #   # g:asyncomplete_log_file = '/tmp/asyncomplete.log'
   # })
-  # Add('prabirshrestha/asyncomplete-lsp.vim', {commit: 'cc5247b'})
+  Add('prabirshrestha/asyncomplete-lsp.vim', {commit: 'cc5247b'})
 
   # Add('vim-denops/denops.vim', {commit: '44baa06'})
   # Add('Shougo/ddc.vim', {commit: '60acdc1'})
@@ -332,11 +347,20 @@ Plugin((Add: func(string, dict<any>, ?func)) => {
     nmap <silent> <leader>a :TestSuite<CR>
     legacy let test#strategy = "vimterminal"
   })
-  Add('itchyny/lightline.vim', {'commit': 'b1e91b4'}, () => {
-    g:lightline = {'colorscheme': 'PaperColor'}
-  })
+  # Add('itchyny/lightline.vim', {'commit': 'b1e91b4'}, () => {
+  #   g:lightline = {'colorscheme': 'PaperColor'}
+  # })
   Add('chr4/nginx.vim', {'commit': '9969445'})
   Add('mattn/vim-maketable', {'commit': 'd72e73f'})
+  Add('andymass/vim-matchup', {'commit': '959e0e7'})
+  Add('jparise/vim-graphql', {'commit': '996749a'})
+  Add('vim-jp/vim-vimlparser', {'commit': 'bf4bf54'})
+  Add('Bakudankun/BackAndForward.vim', {'commit': '05d8c94'}, () => {
+    g:backandforward_config = {'auto_map': 0, 'command_prefix': 'Baf', 'define_commands': 0}
+
+    nnoremap g<C-o> <Plug>(backandforward-back)
+    nnoremap g<C-i> <Plug>(backandforward-forward)
+  })
 })
 
 # }}}
@@ -361,5 +385,20 @@ def g:ProfileStart(func: string = '')
   execute printf('profile func %s', empty(func) ? '*' : func)
 enddef
 
+def g:ProfileAllStart()
+  profile start /tmp/vim_profile.txt
+  profile file *
+  profile func *
+enddef
+
 # }}}
 
+
+def g:ParseVimscript()
+  var VP = vimlparser#import()
+  var code = getbufline(bufnr("%"), 1, "$")
+  var r = VP.StringReader.new(code)
+  var p = VP.VimLParser.new()
+  var c = VP.Compiler.new()
+  echo join(c.compile(p.parse(r)), "\n")
+enddef
